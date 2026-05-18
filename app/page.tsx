@@ -765,48 +765,52 @@ export default function Page() {
           </section>
 
           <section id="cta">
-            <Card className="rounded-[2rem] border-border/80 shadow-none">
-              <CardContent className="p-6 sm:p-8 lg:p-10">
-                <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-                  <div className="space-y-3">
-                    <div className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
+            <div className="overflow-hidden rounded-[2rem] border border-border/80 bg-foreground text-background">
+              <div className="grid gap-0 lg:grid-cols-[minmax(0,1.1fr)_minmax(18rem,0.9fr)]">
+                <div className="p-6 sm:p-8 lg:p-10">
+                  <div className="space-y-4">
+                    <div className="font-mono text-[11px] uppercase tracking-[0.24em] text-background/60">
                       Запись
                     </div>
-                    <h2 className="max-w-[15ch] text-3xl leading-[0.96] font-semibold tracking-[-0.05em] [font-family:var(--font-heading-source)] text-foreground sm:text-4xl">
-                      Запишитесь на обслуживание в URBIO.AUTO
+                    <h2 className="max-w-[14ch] text-3xl leading-[0.96] font-semibold tracking-[-0.05em] [font-family:var(--font-heading-source)] sm:text-4xl">
+                      Запишитесь на обслуживание без лишних звонков и догадок
                     </h2>
-                    <p className="max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-                      Оставьте заявку или позвоните. Дальше проведём по процессу
-                      спокойно и без лишних слов.
+                    <p className="max-w-2xl text-sm leading-6 text-background/72 sm:text-base">
+                      Оставьте заявку или позвоните. Дальше спокойно объясним,
+                      с чего начать и как будет проходить обслуживание.
                     </p>
                   </div>
+                </div>
 
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <Button
-                      asChild
-                      size="lg"
-                      className="h-11 rounded-2xl border border-foreground bg-foreground px-5 text-background transition-transform duration-200 hover:-translate-y-0.5 hover:bg-foreground/90"
-                    >
-                      <a href="https://auto.urbio.tech">
-                        Оставить заявку
-                        <ArrowRight className="size-4" />
-                      </a>
-                    </Button>
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="lg"
-                      className="h-11 rounded-2xl border-border/80 bg-background px-5 transition-transform duration-200 hover:-translate-y-0.5"
-                    >
-                      <a href="tel:+78000000000">
-                        <PhoneCall className="size-4" />
-                        Позвонить
-                      </a>
-                    </Button>
+                <div className="border-t border-background/10 bg-background/4 lg:border-t-0 lg:border-l">
+                  <div className="flex h-full flex-col justify-between p-6 sm:p-8 lg:p-10">
+                    <div className="space-y-3">
+                      <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-background/55">
+                        Связь
+                      </div>
+                      <div className="text-sm leading-6 text-background/72">
+                        Для записи достаточно позвонить. Сразу подскажем, с чего
+                        начать, и поможем выбрать удобное время.
+                      </div>
+                    </div>
+
+                    <div className="mt-8">
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="lg"
+                        className="h-11 w-full rounded-2xl border-background/15 bg-transparent px-5 text-background transition-transform duration-200 hover:-translate-y-0.5 hover:border-background/25 hover:bg-background hover:text-foreground"
+                      >
+                        <a href="tel:+78000000000">
+                          <PhoneCall className="size-4" />
+                          Позвонить
+                        </a>
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </section>
 
           <footer className="rounded-[2rem] border border-border/80 bg-card px-6 py-5 sm:px-8">
