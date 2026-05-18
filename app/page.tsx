@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import Script from "next/script"
 import {
   ArrowRight,
   Banknote,
@@ -256,6 +257,61 @@ const faqItems = [
   },
 ]
 
+const branches = [
+  {
+    title: "URBIO.AUTO Черкесск",
+    description: "Пятигорское шоссе, 13В, бокс 20.",
+    schedule: "Ежедневно, 09:00-19:00",
+    coordinates: [44.24997, 42.071509] as [number, number],
+  },
+]
+
+declare global {
+  interface Window {
+    ymaps: {
+      ready: (callback: () => void) => void
+      Map: new (
+        element: HTMLElement,
+        state: {
+          center: [number, number]
+          zoom: number
+          controls?: string[]
+        },
+        options?: Record<string, unknown>
+      ) => {
+        setCenter: (
+          center: [number, number],
+          zoom?: number,
+          options?: Record<string, unknown>
+        ) => void
+        geoObjects: {
+          add: (geoObject: unknown) => void
+        }
+        destroy: () => void
+      }
+      Placemark: new (
+        coordinates: [number, number],
+        properties?: Record<string, unknown>,
+        options?: {
+          preset?: string
+          iconColor?: string
+        }
+      ) => {
+        options: {
+          set: (key: string, value: unknown) => void
+        }
+        balloon: {
+          open: () => void
+          close: () => void
+        }
+        events: {
+          add: (event: string, callback: () => void) => void
+        }
+      }
+    }
+  }
+}
+
 function SectionIntro({
   label,
   title,
@@ -288,8 +344,29 @@ export default function Page() {
   const [activeAudienceIndex, setActiveAudienceIndex] = useState(0)
   const [audienceProgress, setAudienceProgress] = useState(0)
   const [isAudienceSectionInView, setIsAudienceSectionInView] = useState(false)
+  const [activeBranchIndex, setActiveBranchIndex] = useState(0)
+  const [isYandexMapLoaded, setIsYandexMapLoaded] = useState(false)
+  const [hasYandexMapError, setHasYandexMapError] = useState(false)
   const audienceSectionRef = useRef<HTMLElement | null>(null)
+  const mapContainerRef = useRef<HTMLDivElement | null>(null)
+  const mapRef = useRef<null | {
+    setCenter: (
+      center: [number, number],
+      zoom?: number,
+      options?: Record<string, unknown>
+    ) => void
+    geoObjects: { add: (geoObject: unknown) => void }
+    destroy: () => void
+  }>(null)
+  const placemarksRef = useRef<
+    Array<{
+      options: { set: (key: string, value: unknown) => void }
+      balloon: { open: () => void; close: () => void }
+      events: { add: (event: string, callback: () => void) => void }
+    }>
+  >([])
   const activeAudience = audiences[activeAudienceIndex]
+  const yandexApiKey = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY
 
   useEffect(() => {
     const sectionElement = audienceSectionRef.current
@@ -346,8 +423,118 @@ export default function Page() {
     setAudienceProgress(0)
   }
 
+  useEffect(() => {
+    if (
+      !yandexApiKey ||
+      !isYandexMapLoaded ||
+      hasYandexMapError ||
+      !mapContainerRef.current ||
+      !window.ymaps
+    ) {
+      return
+    }
+
+    let isCancelled = false
+
+    window.ymaps.ready(() => {
+      if (isCancelled || mapRef.current || !mapContainerRef.current) {
+        return
+      }
+
+      const map = new window.ymaps.Map(
+        mapContainerRef.current,
+        {
+          center: [44.2269, 42.0488],
+          zoom: 12,
+          controls: ["zoomControl"],
+        },
+        {
+          suppressMapOpenBlock: true,
+          yandexMapDisablePoiInteractivity: true,
+        }
+      )
+
+      const placemarks = branches.map((branch, index) => {
+        const placemark = new window.ymaps.Placemark(
+          branch.coordinates,
+          {
+            balloonContentHeader: branch.title,
+            balloonContentBody: branch.description,
+            balloonContentFooter: branch.schedule,
+          },
+          {
+            preset:
+              index === activeBranchIndex
+                ? "islands#blackCircleDotIcon"
+                : "islands#grayCircleDotIcon",
+          }
+        )
+
+        placemark.events.add("click", () => {
+          setActiveBranchIndex(index)
+        })
+
+        map.geoObjects.add(placemark)
+        return placemark
+      })
+
+      mapRef.current = map
+      placemarksRef.current = placemarks
+
+      if (!isCancelled) {
+        map.setCenter(branches[activeBranchIndex].coordinates, 14, { duration: 250 })
+        placemarks[activeBranchIndex]?.balloon.open()
+      }
+    })
+
+    return () => {
+      isCancelled = true
+    }
+  }, [activeBranchIndex, hasYandexMapError, isYandexMapLoaded, yandexApiKey])
+
+  useEffect(() => {
+    if (!mapRef.current || placemarksRef.current.length === 0) {
+      return
+    }
+
+    placemarksRef.current.forEach((placemark, index) => {
+      if (!placemark) {
+        return
+      }
+
+      placemark.options.set(
+        "preset",
+        index === activeBranchIndex
+          ? "islands#blackCircleDotIcon"
+          : "islands#grayCircleDotIcon"
+      )
+
+      if (index === activeBranchIndex) {
+        placemark.balloon.open()
+      } else {
+        placemark.balloon.close()
+      }
+    })
+  }, [activeBranchIndex])
+
+  useEffect(() => {
+    return () => {
+      mapRef.current?.destroy()
+      mapRef.current = null
+    }
+  }, [])
+
   return (
     <main className="bg-background">
+      {yandexApiKey ? (
+        <Script
+          src={`https://api-maps.yandex.ru/2.1/?apikey=${yandexApiKey}&lang=ru_RU`}
+          strategy="afterInteractive"
+          onLoad={() => setIsYandexMapLoaded(true)}
+          onError={() => setHasYandexMapError(true)}
+        />
+      ) : null}
+
       <div className="mx-auto max-w-[1320px] px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6">
         <div className="space-y-4">
           <section className="min-h-[calc(90svh-2rem)]">
@@ -811,6 +998,89 @@ export default function Page() {
                 </div>
               </div>
             </div>
+          </section>
+
+          <section>
+            <Card className="rounded-[2rem] border-border/80 shadow-none">
+              <CardHeader className="p-6 sm:p-8">
+                <SectionIntro
+                  label="Филиалы"
+                  title="Наши точки обслуживания"
+                  description="Выберите удобную точку обслуживания и посмотрите, где она находится."
+                />
+              </CardHeader>
+              <CardContent className="px-6 pb-6 sm:px-8 sm:pb-8">
+                <div className="grid gap-4 xl:items-start xl:grid-cols-[minmax(0,0.34fr)_minmax(0,0.66fr)]">
+                  <div className="self-start">
+                    <div className="grid max-h-[26rem] gap-2 overflow-y-auto pr-1 sm:max-h-[32rem]">
+                    {branches.map((branch, index) => {
+                      const isActive = index === activeBranchIndex
+
+                      return (
+                        <button
+                          key={branch.title}
+                          type="button"
+                          onClick={() => setActiveBranchIndex(index)}
+                          className={cn(
+                            "rounded-[1.25rem] border px-4 py-4 text-left transition-all duration-200",
+                            isActive
+                              ? "border-foreground bg-foreground text-background"
+                              : "border-border/80 bg-muted/20 hover:bg-muted/35"
+                          )}
+                        >
+                          <div className="space-y-2">
+                            <div className="text-base font-medium tracking-[-0.03em]">
+                              {branch.title}
+                            </div>
+                            <div
+                              className={cn(
+                                "text-sm leading-6",
+                                isActive
+                                  ? "text-background/72"
+                                  : "text-muted-foreground"
+                              )}
+                            >
+                              {branch.description}
+                            </div>
+                            <div
+                              className={cn(
+                                "font-mono text-[11px] uppercase tracking-[0.2em]",
+                                isActive
+                                  ? "text-background/55"
+                                  : "text-muted-foreground"
+                              )}
+                            >
+                              {branch.schedule}
+                            </div>
+                          </div>
+                        </button>
+                      )
+                    })}
+                    </div>
+                  </div>
+
+                  <div className="overflow-hidden rounded-[1.75rem] border border-border/80 bg-muted/20">
+                    {yandexApiKey && !hasYandexMapError ? (
+                      <div
+                        ref={mapContainerRef}
+                        className="h-[26rem] w-full sm:h-[32rem]"
+                      />
+                    ) : hasYandexMapError ? (
+                      <div className="flex h-[26rem] items-center justify-center px-6 text-center text-sm leading-6 text-muted-foreground sm:h-[32rem]">
+                        Карта не загрузилась. Обычно это значит, что нужно
+                        перезапустить `next dev` после добавления ключа или
+                        проверить доступность Яндекс.Карт.
+                      </div>
+                    ) : (
+                      <div className="flex h-[26rem] items-center justify-center px-6 text-center text-sm leading-6 text-muted-foreground sm:h-[32rem]">
+                        Для отображения карты добавьте ключ Яндекс.Карт в
+                        `NEXT_PUBLIC_YANDEX_MAPS_API_KEY`.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </section>
 
           <footer className="rounded-[2rem] border border-border/80 bg-card px-6 py-5 sm:px-8">
