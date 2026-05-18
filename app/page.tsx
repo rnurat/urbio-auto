@@ -1083,26 +1083,67 @@ export default function Page() {
             </Card>
           </section>
 
-          <footer className="rounded-[2rem] border border-border/80 bg-card px-6 py-5 sm:px-8">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="space-y-1.5">
-                <div className="text-sm font-medium text-foreground">
-                  URBIO.AUTO — современная инфраструктура автомобильного обслуживания.
+          <footer className="space-y-4">
+            <a
+              href="https://dev.urbio.tech"
+              target="_blank"
+              rel="noreferrer"
+              className="group flex flex-col gap-3 rounded-[2rem] border border-border/80 bg-card px-6 py-5 transition-colors duration-200 hover:border-foreground/20 hover:bg-muted/20 sm:px-8 md:flex-row md:items-center md:justify-between"
+            >
+              <div className="space-y-1">
+                <div className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
+                  URBIO
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  Понятный процесс, гарантия и единый стандарт сервиса.
+                <div className="text-sm text-foreground sm:text-[15px]">
+                  Создано внутри экосистемы URBIO.
                 </div>
               </div>
 
-              <Separator className="md:hidden" />
+              <div className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
+                <span>Перейти на страницу разработки</span>
+                <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-1" />
+              </div>
+            </a>
 
-              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                <a href="https://auto.urbio.tech" className="hover:text-foreground">
-                  auto.urbio.tech
-                </a>
-                <a href="https://urbio.tech" className="hover:text-foreground">
-                  urbio.tech
-                </a>
+            <div className="rounded-[2rem] border border-border/80 bg-card px-6 py-5 sm:px-8">
+              <div className="grid gap-6 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] md:items-end">
+                <div className="space-y-2">
+                  <div className="text-sm font-medium text-foreground">
+                    URBIO.AUTO
+                  </div>
+                  <div className="max-w-md text-sm leading-6 text-muted-foreground">
+                    Автосервис с понятным подходом к диагностике, ремонту и регулярному обслуживанию.
+                  </div>
+                </div>
+
+                <div className="grid gap-4 text-sm text-muted-foreground sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <div className="font-mono text-[11px] uppercase tracking-[0.2em]">
+                      Контакты
+                    </div>
+                    <a
+                      href="tel:+78000000000"
+                      className="block text-foreground transition-colors hover:text-muted-foreground"
+                    >
+                      +7 (800) 000 00 00
+                    </a>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <div className="font-mono text-[11px] uppercase tracking-[0.2em]">
+                      Режим работы
+                    </div>
+                    <div className="text-foreground">Ежедневно, 09:00-19:00</div>
+                    <div>По предварительной записи</div>
+                  </div>
+                </div>
+              </div>
+
+              <Separator className="my-5" />
+
+              <div className="flex flex-col gap-2 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between">
+                <div>© {new Date().getFullYear()} URBIO.AUTO. Все права защищены.</div>
+                <div>URBIO.AUTO является частью экосистемы URBIO.</div>
               </div>
             </div>
           </footer>
