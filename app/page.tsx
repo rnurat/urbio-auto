@@ -34,6 +34,14 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 
 const serviceHighlights = [
@@ -144,39 +152,6 @@ const vehicleTypes = [
   },
 ]
 
-const audiences = [
-  {
-    title: "Частным клиентам",
-    description: "Когда нужен нормальный сервис без лишней нервотрёпки.",
-    icon: HeartHandshake,
-    points: [
-      "Понятная диагностика без лишних терминов.",
-      "Согласование работ до начала обслуживания.",
-      "Один сервис для регулярного ухода за автомобилем.",
-    ],
-  },
-  {
-    title: "Семьям",
-    description: "Когда удобно обслуживать несколько автомобилей в одном месте.",
-    icon: CarFront,
-    points: [
-      "Можно вести несколько машин в одном сервисе.",
-      "Проще планировать обслуживание заранее.",
-      "Одинаковый подход независимо от автомобиля.",
-    ],
-  },
-  {
-    title: "Бизнесу",
-    description: "Когда важно держать рабочие автомобили в порядке и под контролем.",
-    icon: BriefcaseBusiness,
-    points: [
-      "Подходит для рабочих автомобилей и небольших парков.",
-      "Есть безналичная оплата и расчётный счёт.",
-      "Меньше хаоса в обслуживании транспорта.",
-    ],
-  },
-]
-
 const payments = [
   {
     title: "Наличный расчёт",
@@ -197,6 +172,37 @@ const payments = [
     title: "Обслуживание юридических лиц",
     description: "Можно вести рабочие автомобили в одном понятном формате.",
     icon: BriefcaseBusiness,
+  },
+]
+
+const contactInfo = {
+  phoneDisplay: "+7 (800) 000 00 00",
+  phoneHref: "+78000000000",
+  workHours: "Ежедневно, 09:00-19:00",
+  bookingHint:
+    "Для записи достаточно позвонить. Сразу подскажем, с чего начать, и поможем выбрать удобное время.",
+}
+
+const pricingHighlights = [
+  {
+    title: "Диагностика автомобиля",
+    priceFrom: "от 1 500 ₽",
+    description: "Первичная проверка состояния автомобиля.",
+  },
+  {
+    title: "Диагностика двигателя",
+    priceFrom: "от 2 500 ₽",
+    description: "Если мотор работает неровно или появилась ошибка.",
+  },
+  {
+    title: "Обслуживание двигателя",
+    priceFrom: "от 4 000 ₽",
+    description: "Базовые работы по моторной части.",
+  },
+  {
+    title: "Ремонт двигателя",
+    priceFrom: "от 12 000 ₽",
+    description: "Когда проблема уже требует ремонта.",
   },
 ]
 
@@ -257,14 +263,14 @@ const faqItems = [
   },
 ]
 
-const branches = [
-  {
-    title: "URBIO.AUTO Черкесск",
-    description: "Пятигорское шоссе, 13В, бокс 20.",
-    schedule: "Ежедневно, 09:00-19:00",
-    coordinates: [44.24997, 42.071509] as [number, number],
-  },
-]
+const branchLocation = {
+  title: "URBIO.AUTO Черкесск",
+  address: "Пятигорское шоссе, 13В, бокс 20.",
+  schedule: contactInfo.workHours,
+  city: "Черкесск",
+  coordinates: [44.24997, 42.071509] as [number, number],
+  mapCenter: [44.2269, 42.0488] as [number, number],
+}
 
 declare global {
   interface Window {
@@ -341,13 +347,8 @@ function SectionIntro({
 }
 
 export default function Page() {
-  const [activeAudienceIndex, setActiveAudienceIndex] = useState(0)
-  const [audienceProgress, setAudienceProgress] = useState(0)
-  const [isAudienceSectionInView, setIsAudienceSectionInView] = useState(false)
-  const [activeBranchIndex, setActiveBranchIndex] = useState(0)
   const [isYandexMapLoaded, setIsYandexMapLoaded] = useState(false)
   const [hasYandexMapError, setHasYandexMapError] = useState(false)
-  const audienceSectionRef = useRef<HTMLElement | null>(null)
   const mapContainerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<null | {
     setCenter: (
@@ -358,70 +359,7 @@ export default function Page() {
     geoObjects: { add: (geoObject: unknown) => void }
     destroy: () => void
   }>(null)
-  const placemarksRef = useRef<
-    Array<{
-      options: { set: (key: string, value: unknown) => void }
-      balloon: { open: () => void; close: () => void }
-      events: { add: (event: string, callback: () => void) => void }
-    }>
-  >([])
-  const activeAudience = audiences[activeAudienceIndex]
   const yandexApiKey = process.env.NEXT_PUBLIC_YANDEX_MAPS_API_KEY
-
-  useEffect(() => {
-    const sectionElement = audienceSectionRef.current
-
-    if (!sectionElement) {
-      return
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsAudienceSectionInView(entry.isIntersecting)
-      },
-      {
-        threshold: 0.55,
-      }
-    )
-
-    observer.observe(sectionElement)
-
-    return () => observer.disconnect()
-  }, [])
-
-  useEffect(() => {
-    if (!isAudienceSectionInView) {
-      return
-    }
-
-    const progressDuration = 6200
-    const tickMs = 60
-    const progressStep = (tickMs / progressDuration) * 100
-
-    const intervalId = window.setInterval(() => {
-      setAudienceProgress((current) => {
-        const nextProgress = current + progressStep
-
-        if (nextProgress >= 100) {
-          window.setTimeout(() => {
-            setActiveAudienceIndex((index) =>
-              index === 0 ? audiences.length - 1 : index - 1
-            )
-          }, 0)
-          return 0
-        }
-
-        return nextProgress
-      })
-    }, tickMs)
-
-    return () => window.clearInterval(intervalId)
-  }, [activeAudienceIndex, isAudienceSectionInView])
-
-  function handleAudienceSelect(index: number) {
-    setActiveAudienceIndex(index)
-    setAudienceProgress(0)
-  }
 
   useEffect(() => {
     if (
@@ -444,7 +382,7 @@ export default function Page() {
       const map = new window.ymaps.Map(
         mapContainerRef.current,
         {
-          center: [44.2269, 42.0488],
+          center: branchLocation.mapCenter,
           zoom: 12,
           controls: ["zoomControl"],
         },
@@ -454,68 +392,32 @@ export default function Page() {
         }
       )
 
-      const placemarks = branches.map((branch, index) => {
-        const placemark = new window.ymaps.Placemark(
-          branch.coordinates,
-          {
-            balloonContentHeader: branch.title,
-            balloonContentBody: branch.description,
-            balloonContentFooter: branch.schedule,
-          },
-          {
-            preset:
-              index === activeBranchIndex
-                ? "islands#blackCircleDotIcon"
-                : "islands#grayCircleDotIcon",
-          }
-        )
+      const placemark = new window.ymaps.Placemark(
+        branchLocation.coordinates,
+        {
+          balloonContentHeader: branchLocation.title,
+          balloonContentBody: branchLocation.address,
+          balloonContentFooter: branchLocation.schedule,
+        },
+        {
+          preset: "islands#blackCircleDotIcon",
+        }
+      )
 
-        placemark.events.add("click", () => {
-          setActiveBranchIndex(index)
-        })
-
-        map.geoObjects.add(placemark)
-        return placemark
-      })
+      map.geoObjects.add(placemark)
 
       mapRef.current = map
-      placemarksRef.current = placemarks
 
       if (!isCancelled) {
-        map.setCenter(branches[activeBranchIndex].coordinates, 14, { duration: 250 })
-        placemarks[activeBranchIndex]?.balloon.open()
+        map.setCenter(branchLocation.coordinates, 14, { duration: 250 })
+        placemark.balloon.open()
       }
     })
 
     return () => {
       isCancelled = true
     }
-  }, [activeBranchIndex, hasYandexMapError, isYandexMapLoaded, yandexApiKey])
-
-  useEffect(() => {
-    if (!mapRef.current || placemarksRef.current.length === 0) {
-      return
-    }
-
-    placemarksRef.current.forEach((placemark, index) => {
-      if (!placemark) {
-        return
-      }
-
-      placemark.options.set(
-        "preset",
-        index === activeBranchIndex
-          ? "islands#blackCircleDotIcon"
-          : "islands#grayCircleDotIcon"
-      )
-
-      if (index === activeBranchIndex) {
-        placemark.balloon.open()
-      } else {
-        placemark.balloon.close()
-      }
-    })
-  }, [activeBranchIndex])
+  }, [hasYandexMapError, isYandexMapLoaded, yandexApiKey])
 
   useEffect(() => {
     return () => {
@@ -535,10 +437,10 @@ export default function Page() {
         />
       ) : null}
 
-      <div className="mx-auto max-w-[1320px] px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6">
+      <div className="mx-auto max-w-[1320px] px-3 py-3 sm:px-5 sm:py-5 lg:px-6 lg:py-6">
         <div className="space-y-4">
           <section className="min-h-[calc(90svh-2rem)]">
-            <div className="flex min-h-[calc(90svh-2rem)] items-center justify-center px-5 py-8 sm:px-7 sm:py-10 lg:px-10">
+            <div className="flex min-h-[calc(90svh-1.5rem)] items-center justify-center px-3 py-6 sm:min-h-[calc(90svh-2rem)] sm:px-7 sm:py-10 lg:px-10">
               <div className="w-full max-w-4xl space-y-6 text-center">
                 <div className="inline-flex rounded-full border border-border/80 bg-background px-4 py-2 font-mono text-[11px] uppercase tracking-[0.28em] text-foreground">
                   URBIO.AUTO
@@ -578,8 +480,8 @@ export default function Page() {
             </div>
           </section>
 
-          <section className="rounded-[2rem] border border-border/80 bg-card p-6 sm:p-8 lg:p-10">
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
+          <section className="rounded-[2rem] border border-border/80 bg-card p-4 sm:p-8 lg:p-10">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)] lg:gap-8">
               <SectionIntro
                 label="Что получит клиент"
                 title="Понятный сервис без лишней нервотрёпки"
@@ -590,7 +492,7 @@ export default function Page() {
                 {serviceHighlights.map((item) => (
                   <div
                     key={item.title}
-                    className="rounded-[1.5rem] border border-border/80 bg-muted/20 p-4 transition-transform duration-200 hover:-translate-y-0.5"
+                    className="rounded-[1.5rem] border border-border/80 bg-muted/20 p-3.5 sm:p-4 transition-transform duration-200 hover:-translate-y-0.5"
                   >
                     <div className="space-y-2">
                       <div className="text-base font-medium tracking-[-0.03em] text-foreground">
@@ -606,8 +508,8 @@ export default function Page() {
             </div>
           </section>
 
-          <section className="rounded-[2rem] border border-border/80 bg-card p-6 sm:p-8 lg:p-10">
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,0.56fr)_minmax(0,1.44fr)] lg:gap-10">
+          <section className="rounded-[2rem] border border-border/80 bg-card p-4 sm:p-8 lg:p-10">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,0.56fr)_minmax(0,1.44fr)] lg:gap-10">
               <SectionIntro
                 label="С какими авто работаем"
                 title="Подходим для разных автомобилей и разных сценариев"
@@ -619,7 +521,7 @@ export default function Page() {
                   <div
                     key={title}
                     className={cn(
-                      "group rounded-[1.5rem] border p-5 transition-all duration-200 hover:-translate-y-1",
+                      "group rounded-[1.5rem] border p-4 sm:p-5 transition-all duration-200 hover:-translate-y-1",
                       index === 0
                         ? "border-foreground bg-foreground text-background sm:col-span-2"
                         : index === 1
@@ -681,8 +583,8 @@ export default function Page() {
             </div>
           </section>
 
-          <section className="rounded-[2rem] border border-border/80 bg-card p-6 sm:p-8 lg:p-10">
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,0.68fr)_minmax(0,1.32fr)] lg:gap-10">
+          <section className="rounded-[2rem] border border-border/80 bg-card p-4 sm:p-8 lg:p-10">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,0.68fr)_minmax(0,1.32fr)] lg:gap-10">
               <SectionIntro
                 label="Почему это удобно"
                 title="Мы убрали из обслуживания всё мутное и раздражающее"
@@ -692,7 +594,7 @@ export default function Page() {
               <div className="overflow-hidden rounded-[1.75rem] border border-border/80 bg-background">
                 {reasons.map(({ title, description, icon: Icon }, index) => (
                   <div key={title}>
-                    <div className="grid gap-5 px-5 py-5 transition-colors duration-200 hover:bg-muted/20 sm:px-6 sm:py-6 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-6">
+                    <div className="grid gap-4 px-4 py-4 transition-colors duration-200 hover:bg-muted/20 sm:px-6 sm:py-6 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-6">
                       <div className="flex size-11 items-center justify-center rounded-2xl border border-border/80 bg-muted/40">
                         <Icon className="size-4 text-foreground" />
                       </div>
@@ -714,7 +616,7 @@ export default function Page() {
 
           <section className="overflow-hidden rounded-[2rem] border border-border/80 bg-foreground text-background">
             <div className="grid gap-0 lg:grid-cols-[minmax(0,0.82fr)_minmax(0,1.18fr)]">
-              <div className="p-6 sm:p-8 lg:p-10">
+              <div className="p-4 sm:p-8 lg:p-10">
                 <SectionIntro
                   label="С чем обращаются"
                   title="Обычно приезжают не с идеальным описанием проблемы, а с реальной ситуацией"
@@ -727,7 +629,7 @@ export default function Page() {
                 {requestScenarios.map((scenario) => (
                   <div
                     key={scenario.title}
-                    className="px-5 py-5 transition-colors duration-200 hover:bg-background/5 sm:px-6 sm:py-6"
+                    className="px-4 py-4 transition-colors duration-200 hover:bg-background/5 sm:px-6 sm:py-6"
                   >
                     <div className="space-y-2">
                       <div className="text-base font-medium tracking-[-0.03em] text-background">
@@ -745,7 +647,7 @@ export default function Page() {
 
           <section
             id="process"
-            className="rounded-[2rem] border border-border/80 bg-card p-6 sm:p-8 lg:p-10"
+            className="rounded-[2rem] border border-border/80 bg-card p-4 sm:p-8 lg:p-10"
           >
             <SectionIntro
               label="Как проходит обслуживание"
@@ -756,7 +658,7 @@ export default function Page() {
             <div className="mt-8 overflow-hidden rounded-[1.75rem] border border-border/80 bg-background">
               {processSteps.map(({ step, title, description, icon: Icon }, index) => (
                 <div key={step}>
-                  <div className="grid gap-5 px-5 py-5 transition-colors duration-200 hover:bg-muted/20 sm:px-6 sm:py-6 lg:grid-cols-[6rem_minmax(0,1fr)_auto] lg:items-center lg:gap-8">
+                  <div className="grid gap-4 px-4 py-4 transition-colors duration-200 hover:bg-muted/20 sm:px-6 sm:py-6 lg:grid-cols-[6rem_minmax(0,1fr)_auto] lg:items-center lg:gap-8">
                     <div className="text-2xl leading-none font-semibold tracking-[-0.06em] [font-family:var(--font-heading-source)] text-foreground sm:text-3xl">
                       {step}
                     </div>
@@ -780,134 +682,21 @@ export default function Page() {
             </div>
           </section>
 
-          <section ref={audienceSectionRef}>
-            <Card className="rounded-[2rem] border-border/80 shadow-none">
-              <CardHeader className="p-6 sm:p-8">
-                <SectionIntro
-                  label="Для кого подходит"
-                  title="Подходит тем, кто хочет нормальный сервис без бардака"
-                  description="Один и тот же понятный подход для частных клиентов, семей и бизнеса."
-                />
-              </CardHeader>
-              <CardContent className="space-y-6 px-6 pb-6 sm:px-8 sm:pb-8">
-                <div className="grid gap-2 lg:grid-cols-3">
-                  {audiences.map((audience, index) => {
-                    const Icon = audience.icon
-                    const isActive = index === activeAudienceIndex
-
-                    return (
-                      <button
-                        key={audience.title}
-                        type="button"
-                        onClick={() => handleAudienceSelect(index)}
-                        className={cn(
-                          "rounded-[1.25rem] border px-4 py-4 text-left transition-all duration-200",
-                          isActive
-                            ? "border-foreground bg-foreground text-background"
-                            : "border-border/80 bg-muted/20 hover:bg-muted/35"
-                        )}
-                      >
-                        <div className="flex items-start gap-4">
-                          <div
-                            className={cn(
-                              "flex size-10 shrink-0 items-center justify-center rounded-2xl border",
-                              isActive
-                                ? "border-background/15 bg-background/8"
-                                : "border-border/80 bg-background"
-                            )}
-                          >
-                            <Icon
-                              className={cn(
-                                "size-4",
-                                isActive ? "text-background" : "text-foreground"
-                              )}
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <div className="min-h-[3rem] text-base leading-6 font-medium tracking-[-0.03em]">
-                              {audience.title}
-                            </div>
-                            <div
-                              className={cn(
-                                "text-sm leading-6",
-                                isActive
-                                  ? "text-background/72"
-                                  : "text-muted-foreground"
-                              )}
-                            >
-                              {audience.description}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div
-                          className={cn(
-                            "mt-4 h-1.5 overflow-hidden rounded-full",
-                            isActive ? "bg-background/12" : "bg-foreground/8"
-                          )}
-                        >
-                          <div
-                            className={cn(
-                              "h-full rounded-full transition-[width] duration-100 ease-linear",
-                              isActive ? "bg-background" : "bg-foreground/18"
-                            )}
-                            style={{
-                              width: `${isActive ? audienceProgress : 0}%`,
-                            }}
-                          />
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
-
-                <div className="rounded-[1.5rem] border border-border/80 bg-background">
-                  <div className="px-5 py-5 sm:px-6">
-                    <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-                      {activeAudience.title}
-                    </div>
-                    <div className="mt-2 max-w-2xl text-xl leading-tight font-medium tracking-[-0.04em] [font-family:var(--font-heading-source)] text-foreground sm:text-2xl">
-                      {activeAudience.description}
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="grid gap-0">
-                    {activeAudience.points.map((point, index) => (
-                      <div key={point}>
-                        <div className="grid gap-3 px-5 py-4 sm:grid-cols-[1.25rem_minmax(0,1fr)] sm:px-6">
-                          <div className="pt-2">
-                            <div className="size-2 rounded-full bg-foreground/80" />
-                          </div>
-                          <div className="text-sm leading-6 text-foreground sm:text-base">
-                            {point}
-                          </div>
-                        </div>
-                        {index < activeAudience.points.length - 1 ? <Separator /> : null}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
-
           <section>
             <Card className="rounded-[2rem] border-border/80 shadow-none">
-              <CardHeader className="p-6 sm:p-8">
+              <CardHeader className="p-4 sm:p-8">
                 <SectionIntro
                   label="Оплата"
                   title="Оплатить можно так, как удобно вам"
                   description="Обычные понятные способы оплаты для частных клиентов и компаний."
                 />
               </CardHeader>
-              <CardContent className="px-6 pb-6 sm:px-8 sm:pb-8">
+              <CardContent className="px-4 pb-4 sm:px-8 sm:pb-8">
                 <div className="overflow-hidden rounded-[1.75rem] border border-border/80 bg-background">
                   <div className="grid sm:grid-cols-2">
                     {payments.map(({ title, description, icon: Icon }, index) => (
                       <div key={title}>
-                        <div className="flex h-full gap-4 px-5 py-5 transition-colors duration-200 hover:bg-muted/20 sm:px-6 sm:py-6">
+                        <div className="flex h-full gap-4 px-4 py-4 transition-colors duration-200 hover:bg-muted/20 sm:px-6 sm:py-6">
                           <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-border/80 bg-muted/40">
                             <Icon className="size-4 text-foreground" />
                           </div>
@@ -929,16 +718,87 @@ export default function Page() {
             </Card>
           </section>
 
+          <section className="rounded-[2rem] border border-border/80 bg-card p-4 sm:p-8 lg:p-10">
+            <div className="space-y-6 lg:space-y-8">
+              <SectionIntro
+                label="Стоимость"
+                title="Ориентир по стоимости до визита"
+                description="Ниже несколько базовых ориентиров по стоимости. Это не весь перечень услуг, а самые частые сценарии обращения."
+              />
+
+              <div className="space-y-3">
+                <div className="rounded-[1.75rem] border border-foreground bg-foreground p-5 text-background sm:p-6">
+                  <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
+                    <div className="space-y-3">
+                      <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-background/55">
+                        Основной запрос
+                      </div>
+                      <div className="max-w-2xl text-2xl leading-tight font-medium tracking-[-0.04em] [font-family:var(--font-heading-source)] sm:text-3xl">
+                        Чаще всего к нам приезжают с вопросами по двигателю, обслуживанию иномарок и автомобилей АвтоВАЗ.
+                      </div>
+                      <div className="max-w-2xl text-sm leading-6 text-background/72 sm:text-base">
+                        По телефону даём предварительное понимание, а после осмотра уже называем точную сумму.
+                      </div>
+                    </div>
+
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="lg"
+                      className="h-11 rounded-2xl border-background/15 bg-transparent px-5 text-background transition-transform duration-200 hover:-translate-y-0.5 hover:border-background/25 hover:bg-background/8 hover:text-background"
+                    >
+                      <a href={`tel:${contactInfo.phoneHref}`}>
+                        Уточнить по телефону
+                        <PhoneCall className="size-4" />
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="overflow-hidden rounded-[1.75rem] border border-border/80 bg-background">
+                  <Table className="min-w-[42rem]">
+                    <TableHeader>
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="min-w-[14rem] px-4 sm:px-6">Услуга</TableHead>
+                        <TableHead className="min-w-[9rem] px-4 sm:px-6">Стоимость</TableHead>
+                        <TableHead className="min-w-[19rem] px-4 sm:px-6">Что входит</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {pricingHighlights.map(({ title, priceFrom, description }) => (
+                        <TableRow key={title}>
+                          <TableCell className="px-4 py-4 font-medium whitespace-normal text-foreground sm:px-6">
+                            {title}
+                          </TableCell>
+                          <TableCell className="px-4 py-4 font-mono text-[11px] uppercase tracking-[0.22em] whitespace-normal text-muted-foreground sm:px-6">
+                            {priceFrom}
+                          </TableCell>
+                          <TableCell className="px-4 py-4 whitespace-normal text-muted-foreground sm:px-6">
+                            {description}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                <div className="rounded-[1.25rem] border border-border/80 bg-background px-4 py-3 text-sm leading-6 text-muted-foreground">
+                  Это только часть услуг и базовые ориентиры по стоимости. Финальная сумма зависит от автомобиля, его состояния и объёма работ.
+                </div>
+              </div>
+            </div>
+          </section>
+
           <section>
             <Card className="rounded-[2rem] border-border/80 shadow-none">
-              <CardHeader className="p-6 sm:p-8">
+              <CardHeader className="p-4 sm:p-8">
                 <SectionIntro
                   label="Частые вопросы"
                   title="Что обычно хотят понять до записи"
                   description="Короткие ответы на основные вопросы до первого обращения."
                 />
               </CardHeader>
-              <CardContent className="px-6 pb-6 sm:px-8 sm:pb-8">
+              <CardContent className="px-4 pb-4 sm:px-8 sm:pb-8">
                 <Accordion type="single" collapsible className="w-full">
                   {faqItems.map((item) => (
                     <AccordionItem key={item.value} value={item.value}>
@@ -954,7 +814,7 @@ export default function Page() {
           <section id="cta">
             <div className="overflow-hidden rounded-[2rem] border border-border/80 bg-foreground text-background">
               <div className="grid gap-0 lg:grid-cols-[minmax(0,1.1fr)_minmax(18rem,0.9fr)]">
-                <div className="p-6 sm:p-8 lg:p-10">
+                <div className="p-4 sm:p-8 lg:p-10">
                   <div className="space-y-4">
                     <div className="font-mono text-[11px] uppercase tracking-[0.24em] text-background/60">
                       Запись
@@ -963,21 +823,20 @@ export default function Page() {
                       Запишитесь на обслуживание без лишних звонков и догадок
                     </h2>
                     <p className="max-w-2xl text-sm leading-6 text-background/72 sm:text-base">
-                      Оставьте заявку или позвоните. Дальше спокойно объясним,
-                      с чего начать и как будет проходить обслуживание.
+                      По телефону спокойно объясним, с чего начать, на что
+                      обратить внимание и как будет проходить обслуживание.
                     </p>
                   </div>
                 </div>
 
                 <div className="border-t border-background/10 bg-background/4 lg:border-t-0 lg:border-l">
-                  <div className="flex h-full flex-col justify-between p-6 sm:p-8 lg:p-10">
+                  <div className="flex h-full flex-col justify-between p-4 sm:p-8 lg:p-10">
                     <div className="space-y-3">
                       <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-background/55">
                         Связь
                       </div>
                       <div className="text-sm leading-6 text-background/72">
-                        Для записи достаточно позвонить. Сразу подскажем, с чего
-                        начать, и поможем выбрать удобное время.
+                        {contactInfo.bookingHint}
                       </div>
                     </div>
 
@@ -986,9 +845,9 @@ export default function Page() {
                         asChild
                         variant="outline"
                         size="lg"
-                        className="h-11 w-full rounded-2xl border-background/15 bg-transparent px-5 text-background transition-transform duration-200 hover:-translate-y-0.5 hover:border-background/25 hover:bg-background hover:text-foreground"
+                        className="h-11 w-full rounded-2xl border-background/15 bg-transparent px-5 text-background transition-transform duration-200 hover:-translate-y-0.5 hover:border-background/25 hover:bg-background/8 hover:text-background"
                       >
-                        <a href="tel:+78000000000">
+                        <a href={`tel:${contactInfo.phoneHref}`}>
                           <PhoneCall className="size-4" />
                           Позвонить
                         </a>
@@ -1002,60 +861,32 @@ export default function Page() {
 
           <section>
             <Card className="rounded-[2rem] border-border/80 shadow-none">
-              <CardHeader className="p-6 sm:p-8">
+              <CardHeader className="p-4 sm:p-8">
                 <SectionIntro
                   label="Филиалы"
                   title="Наши точки обслуживания"
-                  description="Выберите удобную точку обслуживания и посмотрите, где она находится."
+                  description="Показываем, где находится сервис и как к нам удобнее приехать."
                 />
               </CardHeader>
-              <CardContent className="px-6 pb-6 sm:px-8 sm:pb-8">
-                <div className="grid gap-4 xl:items-start xl:grid-cols-[minmax(0,0.34fr)_minmax(0,0.66fr)]">
-                  <div className="self-start">
-                    <div className="grid max-h-[26rem] gap-2 overflow-y-auto pr-1 sm:max-h-[32rem]">
-                    {branches.map((branch, index) => {
-                      const isActive = index === activeBranchIndex
+              <CardContent className="px-4 pb-4 sm:px-8 sm:pb-8">
+                <div className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="rounded-[1.5rem] border border-border/80 bg-muted/20 p-4">
+                      <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                        Точка
+                      </div>
+                      <div className="mt-2 text-base font-medium tracking-[-0.03em] text-foreground">
+                        {branchLocation.title}
+                      </div>
+                    </div>
 
-                      return (
-                        <button
-                          key={branch.title}
-                          type="button"
-                          onClick={() => setActiveBranchIndex(index)}
-                          className={cn(
-                            "rounded-[1.25rem] border px-4 py-4 text-left transition-all duration-200",
-                            isActive
-                              ? "border-foreground bg-foreground text-background"
-                              : "border-border/80 bg-muted/20 hover:bg-muted/35"
-                          )}
-                        >
-                          <div className="space-y-2">
-                            <div className="text-base font-medium tracking-[-0.03em]">
-                              {branch.title}
-                            </div>
-                            <div
-                              className={cn(
-                                "text-sm leading-6",
-                                isActive
-                                  ? "text-background/72"
-                                  : "text-muted-foreground"
-                              )}
-                            >
-                              {branch.description}
-                            </div>
-                            <div
-                              className={cn(
-                                "font-mono text-[11px] uppercase tracking-[0.2em]",
-                                isActive
-                                  ? "text-background/55"
-                                  : "text-muted-foreground"
-                              )}
-                            >
-                              {branch.schedule}
-                            </div>
-                          </div>
-                        </button>
-                      )
-                    })}
+                    <div className="rounded-[1.5rem] border border-border/80 bg-muted/20 p-4 sm:col-span-2">
+                      <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                        Адрес
+                      </div>
+                      <div className="mt-2 text-base font-medium tracking-[-0.03em] text-foreground">
+                        {branchLocation.address}
+                      </div>
                     </div>
                   </div>
 
@@ -1078,6 +909,11 @@ export default function Page() {
                       </div>
                     )}
                   </div>
+
+                  <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                    <div>{branchLocation.city}</div>
+                    <div>{branchLocation.schedule}</div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1088,7 +924,7 @@ export default function Page() {
               href="https://dev.urbio.tech"
               target="_blank"
               rel="noreferrer"
-              className="group flex flex-col gap-3 rounded-[2rem] border border-border/80 bg-card px-6 py-5 transition-colors duration-200 hover:border-foreground/20 hover:bg-muted/20 sm:px-8 md:flex-row md:items-center md:justify-between"
+              className="group flex flex-col gap-3 rounded-[2rem] border border-border/80 bg-card px-4 py-4 transition-colors duration-200 hover:border-foreground/20 hover:bg-muted/20 sm:px-8 sm:py-5 md:flex-row md:items-center md:justify-between"
             >
               <div className="space-y-1">
                 <div className="font-mono text-[11px] uppercase tracking-[0.24em] text-muted-foreground">
@@ -1105,7 +941,7 @@ export default function Page() {
               </div>
             </a>
 
-            <div className="rounded-[2rem] border border-border/80 bg-card px-6 py-5 sm:px-8">
+            <div className="rounded-[2rem] border border-border/80 bg-card px-4 py-4 sm:px-8 sm:py-5">
               <div className="grid gap-6 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)] md:items-end">
                 <div className="space-y-2">
                   <div className="text-sm font-medium text-foreground">
@@ -1122,10 +958,10 @@ export default function Page() {
                       Контакты
                     </div>
                     <a
-                      href="tel:+78000000000"
+                      href={`tel:${contactInfo.phoneHref}`}
                       className="block text-foreground transition-colors hover:text-muted-foreground"
                     >
-                      +7 (800) 000 00 00
+                      {contactInfo.phoneDisplay}
                     </a>
                   </div>
 
@@ -1133,7 +969,7 @@ export default function Page() {
                     <div className="font-mono text-[11px] uppercase tracking-[0.2em]">
                       Режим работы
                     </div>
-                    <div className="text-foreground">Ежедневно, 09:00-19:00</div>
+                    <div className="text-foreground">{contactInfo.workHours}</div>
                     <div>По предварительной записи</div>
                   </div>
                 </div>
