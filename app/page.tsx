@@ -44,6 +44,8 @@ import {
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 
+const siteUrl = "https://auto.urbio.tech"
+
 const serviceHighlights = [
   {
     title: "Прозрачная диагностика",
@@ -206,6 +208,17 @@ const pricingHighlights = [
   },
 ]
 
+const searchQueries = [
+  "ремонт авто Черкесск",
+  "автосервис Черкесск",
+  "диагностика авто Черкесск",
+  "ремонт двигателя Черкесск",
+  "СТО Черкесск",
+  "обслуживание авто Черкесск",
+  "ремонт иномарок Черкесск",
+  "ремонт АвтоВАЗ Черкесск",
+]
+
 const faqItems = [
   {
     value: "diagnostics",
@@ -270,6 +283,72 @@ const branchLocation = {
   city: "Черкесск",
   coordinates: [44.24997, 42.071509] as [number, number],
   mapCenter: [44.2269, 42.0488] as [number, number],
+}
+
+const localBusinessSchema = {
+  "@context": "https://schema.org",
+  "@type": "AutoRepair",
+  name: "URBIO.AUTO",
+  url: siteUrl,
+  telephone: contactInfo.phoneDisplay,
+  image: `${siteUrl}/favicon.ico`,
+  priceRange: "₽₽",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: branchLocation.address,
+    addressLocality: branchLocation.city,
+    addressCountry: "RU",
+  },
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: branchLocation.coordinates[0],
+    longitude: branchLocation.coordinates[1],
+  },
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ],
+      opens: "09:00",
+      closes: "19:00",
+    },
+  ],
+  areaServed: [
+    {
+      "@type": "City",
+      name: "Черкесск",
+    },
+  ],
+  serviceType: [
+    "Ремонт авто",
+    "Диагностика автомобиля",
+    "Ремонт двигателя",
+    "Обслуживание автомобилей",
+    "Диагностика двигателя",
+    "Ремонт иномарок",
+    "Ремонт автомобилей АвтоВАЗ",
+    "Техническое обслуживание авто",
+  ],
+}
+
+const faqSchema = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqItems.map((item) => ({
+    "@type": "Question",
+    name: item.title,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: item.description,
+    },
+  })),
 }
 
 declare global {
@@ -428,6 +507,18 @@ export default function Page() {
 
   return (
     <main className="bg-background">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(localBusinessSchema),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqSchema),
+        }}
+      />
       {yandexApiKey ? (
         <Script
           src={`https://api-maps.yandex.ru/2.1/?apikey=${yandexApiKey}&lang=ru_RU`}
@@ -448,11 +539,12 @@ export default function Page() {
 
                 <div className="space-y-3">
                   <h1 className="mx-auto max-w-[16ch] text-[clamp(2rem,7vw,4rem)] leading-[0.96] font-semibold tracking-[-0.06em] [font-family:var(--font-heading-source)] text-foreground">
-                    Современный автосервис с прозрачным обслуживанием
+                    Автосервис в Черкесске с понятным обслуживанием
                   </h1>
                   <p className="mx-auto max-w-md text-sm leading-6 text-muted-foreground sm:text-base">
-                    Диагностика, ремонт и обслуживание с понятным подходом и
-                    уважением к вашему времени.
+                    URBIO.AUTO — автосервис и СТО в Черкесске: ремонт авто,
+                    диагностика автомобиля и двигателя, обслуживание иномарок и
+                    АвтоВАЗ с понятным подходом и уважением к вашему времени.
                   </p>
                 </div>
 
@@ -513,7 +605,7 @@ export default function Page() {
               <SectionIntro
                 label="С какими авто работаем"
                 title="Подходим для разных автомобилей и разных сценариев"
-                description="Можно приехать с личным автомобилем, рабочей машиной или вести в одном месте сразу несколько автомобилей."
+                description="Работаем с личными, семейными и рабочими автомобилями. В том числе с иномарками и автомобилями АвтоВАЗ в Черкесске."
               />
 
               <div className="grid gap-3 sm:grid-cols-2 sm:auto-rows-[minmax(12rem,1fr)]">
@@ -864,9 +956,9 @@ export default function Page() {
               <CardHeader className="p-4 sm:p-8">
                 <SectionIntro
                   label="Филиалы"
-                  title="Наши точки обслуживания"
-                  description="Показываем, где находится сервис и как к нам удобнее приехать."
-                />
+                title="Наши точки обслуживания"
+                description="URBIO.AUTO — автосервис в Черкесске. Ниже адрес, карта и режим работы сервиса."
+              />
               </CardHeader>
               <CardContent className="px-4 pb-4 sm:px-8 sm:pb-8">
                 <div className="space-y-4">
@@ -910,13 +1002,36 @@ export default function Page() {
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-                    <div>{branchLocation.city}</div>
-                    <div>{branchLocation.schedule}</div>
+                <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+                  <div>{branchLocation.city}</div>
+                  <div>{branchLocation.schedule}</div>
+                </div>
+
+                <div className="rounded-[1.25rem] border border-border/80 bg-background px-4 py-3 text-sm leading-6 text-muted-foreground">
+                  Если вы ищете ремонт авто в Черкесске, диагностику автомобиля,
+                  обслуживание двигателя или понятный автосервис без лишней
+                  путаницы, здесь можно начать с простого звонка и сразу понять,
+                  подходит ли сервис под вашу задачу.
+                </div>
+
+                <div className="rounded-[1.25rem] border border-border/80 bg-muted/20 px-4 py-4">
+                  <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+                    Часто ищут
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {searchQueries.map((query) => (
+                      <div
+                        key={query}
+                        className="rounded-full border border-border/80 bg-background px-3 py-1.5 text-sm text-foreground"
+                      >
+                        {query}
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </CardContent>
+          </Card>
           </section>
 
           <footer className="space-y-4">
