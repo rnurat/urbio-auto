@@ -1,0 +1,27 @@
+#$schema: https://taskfile.dev/schema.json
+version: '3.17'
+
+dotenv:
+    - '.env'
+
+tasks:
+    c:
+        desc: docker compose и аргументы. Рабочий пример [task c -- up -d]. -- обязательно.
+        cmd: /bin/sh -c 'if [ -f .env ]; then docker compose --env-file .env {{.CLI_ARGS}}; else docker compose {{.CLI_ARGS}}; fi'
+
+    bash:
+        desc: Войти в терминал auto app.
+        cmd: task c -- exec app sh
+
+    up:
+        desc: Полное поднятие auto окружения.
+        cmds:
+            - task down
+            - task c -- up -d --build --remove-orphans
+            - docker image prune --force
+            - docker container prune --force
+
+    down:
+        desc: Остановить и удалить контейнеры текущего окружения.
+        cmds:
+            - task c -- down
