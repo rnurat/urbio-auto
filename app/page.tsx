@@ -178,8 +178,9 @@ const payments = [
 ]
 
 const contactInfo = {
-  phoneDisplay: "+7 (800) 000 00 00",
-  phoneHref: "+78000000000",
+  phoneDisplay:
+    process.env.NEXT_PUBLIC_PHONE_DISPLAY ?? "+7 (800) 000 00 00",
+  phoneHref: process.env.NEXT_PUBLIC_PHONE_HREF ?? "+78000000000",
   workHours: "Ежедневно, 09:00-19:00",
   bookingHint:
     "Для записи достаточно позвонить. Сразу подскажем, с чего начать, и поможем выбрать удобное время.",
@@ -206,17 +207,6 @@ const pricingHighlights = [
     priceFrom: "от 12 000 ₽",
     description: "Когда проблема уже требует ремонта.",
   },
-]
-
-const searchQueries = [
-  "ремонт авто Черкесск",
-  "автосервис Черкесск",
-  "диагностика авто Черкесск",
-  "ремонт двигателя Черкесск",
-  "СТО Черкесск",
-  "обслуживание авто Черкесск",
-  "ремонт иномарок Черкесск",
-  "ремонт АвтоВАЗ Черкесск",
 ]
 
 const faqItems = [
@@ -1014,21 +1004,6 @@ export default function Page() {
                   подходит ли сервис под вашу задачу.
                 </div>
 
-                <div className="rounded-[1.25rem] border border-border/80 bg-muted/20 px-4 py-4">
-                  <div className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-                    Часто ищут
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {searchQueries.map((query) => (
-                      <div
-                        key={query}
-                        className="rounded-full border border-border/80 bg-background px-3 py-1.5 text-sm text-foreground"
-                      >
-                        {query}
-                      </div>
-                    ))}
-                  </div>
-                </div>
               </div>
             </CardContent>
           </Card>

@@ -32,6 +32,9 @@ APP_ENV=production DOCKER_PORT_AUTO=3010 docker compose up --build
 Пример `auto/.env`:
 
 ```env
+NEXT_PUBLIC_YANDEX_MAPS_API_KEY=your-yandex-maps-api-key
+NEXT_PUBLIC_PHONE_DISPLAY=+7 (800) 000 00 00
+NEXT_PUBLIC_PHONE_HREF=+78000000000
 DOCKER_PORT_AUTO=3010
 ```
 
